@@ -1,0 +1,135 @@
+version: '3.4'
+
+networks:
+  default:
+    external:
+      name: apps
+
+services:
+
+  cm1:
+    image: local/splunk:8.1.3
+    build:
+      context: ../.images/splunk
+      network: host
+      args:
+        VERSION: 8.1.3
+        TOOL: splunk
+    container_name: cm1
+    hostname: cm1
+    ports:
+    - "8100:8000"
+    - "8189:8089"
+    environment:
+      LANG: en_US.utf8
+      SPLUNK_PASSWORD: password
+      SPLUNK_DISABLE_POPUPS: "true"
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_ROLE: splunk_cluster_master
+      SPLUNK_CLUSTER_MASTER_URL: cm1
+      SPLUNK_IDXC_LABEL: docker_idx
+      SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
+      SPLUNK_IDXC_DISCOVERYPASS4SYMMKEY: cm_and_forwarder_comms
+      SPLUNK_IDXC_REPLICATION_FACTOR: 2
+      SPLUNK_IDXC_SEARCH_FACTOR: 2
+      SPLUNK_MULTISITE_REPLICATION_FACTOR_ORIGIN: 1
+      SPLUNK_MULTISITE_REPLICATION_FACTOR_TOTAL: 2
+      SPLUNK_MULTISITE_REPLICATION_SEARCH_ORIGIN: 1
+      SPLUNK_MULTISITE_REPLICATION_SEARCH_TOTAL: 2
+      SPLUNK_ALL_SITES: site1,site2
+      SPLUNK_MULTISITE_MASTER: cm1
+      SPLUNK_SITE: site1 
+    volumes:
+    - ${HOME}/projects:/projects
+ 
+  idx1-1: 
+    image: local/splunk:8.1.3
+    build:
+      context: ../.images/splunk
+      network: host
+      args:
+        VERSION: 8.1.3
+        TOOL: splunk
+    container_name: idx1-1
+    hostname: idx1-1
+    environment:
+      LANG: en_US.utf8
+      SPLUNK_PASSWORD: password
+      SPLUNK_DISABLE_POPUPS: "true"
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_ROLE: splunk_indexer
+      SPLUNK_CLUSTER_MASTER_URL: cm1
+      SPLUNK_MULTISITE_MASTER: cm1
+      SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
+      SPLUNK_SITE: site1
+    volumes:
+    - ${HOME}/projects:/projects
+
+  idx1-2: 
+    image: local/splunk:8.1.3
+    build:
+      context: ../.images/splunk
+      network: host
+      args:
+        VERSION: 8.1.3
+        TOOL: splunk
+    container_name: idx1-2
+    hostname: idx1-2
+    environment:
+      LANG: en_US.utf8
+      SPLUNK_PASSWORD: password
+      SPLUNK_DISABLE_POPUPS: "true"
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_ROLE: splunk_indexer
+      SPLUNK_CLUSTER_MASTER_URL: cm1
+      SPLUNK_MULTISITE_MASTER: cm1
+      SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
+      SPLUNK_SITE: site1
+    volumes:
+    - ${HOME}/projects:/projects
+
+  idx2-1: 
+    image: local/splunk:8.1.3
+    build:
+      context: ../.images/splunk
+      network: host
+      args:
+        VERSION: 8.1.3
+        TOOL: splunk
+    container_name: idx2-1
+    hostname: idx2-1
+    environment:
+      LANG: en_US.utf8
+      SPLUNK_PASSWORD: password
+      SPLUNK_DISABLE_POPUPS: "true"
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_ROLE: splunk_indexer
+      SPLUNK_CLUSTER_MASTER_URL: cm1
+      SPLUNK_MULTISITE_MASTER: cm1
+      SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
+      SPLUNK_SITE: site2
+    volumes:
+    - ${HOME}/projects:/projects
+
+  idx2-2: 
+    image: local/splunk:8.1.3
+    build:
+      context: ../.images/splunk
+      network: host
+      args:
+        VERSION: 8.1.3
+        TOOL: splunk
+    container_name: idx2-2
+    hostname: idx2-2
+    environment:
+      LANG: en_US.utf8
+      SPLUNK_PASSWORD: password
+      SPLUNK_DISABLE_POPUPS: "true"
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_ROLE: splunk_indexer
+      SPLUNK_CLUSTER_MASTER_URL: cm1
+      SPLUNK_MULTISITE_MASTER: cm1
+      SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
+      SPLUNK_SITE: site2
+    volumes:
+    - ${HOME}/projects:/projects
