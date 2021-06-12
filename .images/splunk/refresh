@@ -1,0 +1,9 @@
+#!/bin/bash
+filter="-v"
+[[ $1 == "-a" ]] && filter=""
+
+curl -k -u admin:password https://localhost:8089/servicesNS/-/-/admin?output_mode=json -s | jq -r '.entry[] | [ .name, .links._reload ] | @csv' | grep _reload | grep $filter auth-services | sed 's/"//g' | cut -d',' -f2 | while read line;do
+curl -k -u admin:password https://localhost:8089$line -XPOST >/dev/null 2>&1 &
+done
+wait $(jobs -p)
+echo "done"
