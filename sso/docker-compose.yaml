@@ -1,0 +1,56 @@
+version: '3.4'
+
+networks:
+  default:
+    name: apps
+
+services:
+
+  splunk:
+    image: splunk/splunk:8.2.6
+    container_name: splunk
+    hostname: splunk
+    ports:
+    - "8000:8000"
+    - "8089:8089"
+    - "8088:8088"
+    environment:
+      SPLUNK_DISABLE_POPUPS: "true"
+      LANG: en_US.utf8
+      SPLUNK_ROLE: splunk_standalone
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_PASSWORD: password
+      SPLUNK_HEC_TOKEN: password
+    volumes:
+    - ./resources/splunk-etc/system/local:/opt/splunk-etc/system/local:ro
+  
+  ldap:
+    image: osixia/openldap:1.5.0
+    container_name: ldap
+    hostname: ldap
+    ports:
+    - "389:389"
+    - "636:636"
+    environment:
+      LDAP_ORGANISATION: home-local
+      LDAP_DOMAIN: home.local
+      LDAP_ADMIN_PASSWORD: password
+      LDAP_CONFIG_PASSWORD: password
+      LDAP_RFC2307BIS_SCHEMA: 'true'
+      LDAP_TLS_VERIFY_CLIENT: never
+      LDAP_REMOVE_CONFIG_AFTER_SETUP: 'true'
+    command: ["--copy-service","--loglevel=debug"]
+    volumes:
+    - ./resources/ldap-ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom
+
+  proxy:
+    image: httpd:2.4.56
+    container_name: httpd
+    hostname: proxy
+    ports:
+    - 9000:9000
+    volumes:
+    - ./resources/apache-conf/httpd.conf:/usr/local/apache2/conf/httpd.conf
+    depends_on:
+      - splunk
+      - ldap

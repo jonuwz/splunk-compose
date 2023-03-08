@@ -2,40 +2,41 @@ version: '3.4'
 
 networks:
   default:
-    external:
-      name: apps
+    name: apps
 
 services:
 
   sbs:
-    image: local/splunk:8.1.3
+    image: local/splunk:8.2.6
     build:
       context: ../.images/splunk
       network: host
       args:
-        VERSION: 8.1.3
+        VERSION: 8.2.6
         TOOL: splunk
     container_name: sbs
     hostname: sbs
     ports:
     - "8000:8000"
     - "8089:8089"
+    - "8088:8088"
     environment:
       SPLUNK_DISABLE_POPUPS: "true"
       LANG: en_US.utf8
       SPLUNK_ROLE: splunk_standalone
       SPLUNK_START_ARGS: --accept-license
       SPLUNK_PASSWORD: password
+      SPLUNK_HEC_TOKEN: password
     volumes:
     - ${HOME}/projects:/projects
   
   sbf:
-    image: local/universalforwarder:8.1.3
+    image: local/universalforwarder:8.2.6
     build:
       context: ../.images/splunk
       network: host
       args:
-        VERSION: 8.1.3
+        VERSION: 8.2.6
         TOOL: universalforwarder
     container_name: sbf
     hostname: sbf

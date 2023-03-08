@@ -1,50 +1,25 @@
-version: '3.6'
+version: '3.4'
 
 networks:
   default:
-    name: apps
+    external:
+      name: apps
 
 services:
 
-  sh1:
-    profiles: [ "sh" ]
-    image: &image local/splunk:8.2.6
-    build:
-      context: ../.images/splunk
-      network: host
-      args:
-        VERSION: &version 8.2.6
-        TOOL: splunk
-    container_name: sh1
-    hostname: sh1
-    ports:
-    - "8100:8000"
-    - "8189:8089"
-    environment:
-      LANG: en_US.utf8
-      SPLUNK_PASSWORD: password
-      SPLUNK_DISABLE_POPUPS: "true"
-      SPLUNK_START_ARGS: --accept-license
-      SPLUNK_ROLE: splunk_search_head
-      SPLUNK_CLUSTER_MASTER_URL: cm1
-      SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
-      SPLUNK_IDXC_DISCOVERYPASS4SYMMKEY: cm_and_forwarder_comms
-    volumes:
-    - ${HOME}/projects:/projects
-
   cm1:
-    image: *image
+    image: local/splunk:8.2.6
     build:
       context: ../.images/splunk
       network: host
       args:
-        VERSION: *version
+        VERSION: 8.2.6
         TOOL: splunk
     container_name: cm1
     hostname: cm1
     ports:
-    - "8101:8000"
-    - "8190:8089"
+    - "8100:8000"
+    - "8189:8089"
     environment:
       LANG: en_US.utf8
       SPLUNK_PASSWORD: password
@@ -61,17 +36,15 @@ services:
     - ${HOME}/projects:/projects
  
   idx1-1: 
-    image: *image
+    image: local/splunk:8.2.6
     build:
       context: ../.images/splunk
       network: host
       args:
-        VERSION: *version
+        VERSION: 8.2.6
         TOOL: splunk
     container_name: idx1-1
     hostname: idx1-1
-    ports:
-    - "8188:8088"
     environment:
       LANG: en_US.utf8
       SPLUNK_PASSWORD: password
@@ -80,17 +53,16 @@ services:
       SPLUNK_ROLE: splunk_indexer
       SPLUNK_CLUSTER_MASTER_URL: cm1
       SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
-      SPLUNK_HEC_TOKEN: password
     volumes:
     - ${HOME}/projects:/projects
 
   idx1-2: 
-    image: *image
+    image: local/splunk:8.2.6
     build:
       context: ../.images/splunk
       network: host
       args:
-        VERSION: *version
+        VERSION: 8.2.6
         TOOL: splunk
     container_name: idx1-2
     hostname: idx1-2

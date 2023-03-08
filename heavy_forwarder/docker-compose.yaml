@@ -15,17 +15,17 @@ services:
       args:
         VERSION: 8.2.6
         TOOL: splunk
-    container_name: sh1
-    hostname: sh1
+    container_name: hf1
+    hostname: hf1
     ports:
-    - "8200:8000"
-    - "8289:8089"
+    - "8300:8000"
+    - "8389:8089"
     environment:
       LANG: en_US.utf8
       SPLUNK_PASSWORD: password
       SPLUNK_DISABLE_POPUPS: "true"
       SPLUNK_START_ARGS: --accept-license
-      SPLUNK_ROLE: splunk_search_head
+      SPLUNK_ROLE: splunk_heavy_forwarder
       SPLUNK_CLUSTER_MASTER_URL: cm1
       SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
       SPLUNK_IDXC_DISCOVERYPASS4SYMMKEY: cm_and_forwarder_comms
