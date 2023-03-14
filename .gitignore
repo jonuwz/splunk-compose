@@ -1,0 +1,4 @@
+saml/resources/certs/*
+saml/resources/realms/apps.json
+saml/resources/splunk/splunk-etc/auth/idpCerts
+saml/resources/splunk/splunk-etc/auth/*.pem
