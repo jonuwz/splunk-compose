@@ -1,0 +1,56 @@
+
+STARTING
+========
+./prep.sh   ( one time only to create certs and config )
+
+docker compose up -d
+
+WHAT
+====
+
+This demonstrates splunk using SAML as an authentication strategy
+
+This uses :
+keycloak (an opensource idp sponsored by redhat)
+splunk 
+openldap
+
+NOTES
+=====
+Splunk sends signed SAML requests to keycloak
+Keycloak verifies the signiture.
+Keycloak sends signed documents back to splunk
+Splunk verifies the signature.
+
+In order to do this we need to prepare some certificates + keys ahead of time
+
+LOGGING IN
+==========
+
+Log into keycloak at http://localhost:9080   (admin/password)
+Log into splunk using http://localhost:9000  (splunkadmin/password)
+
+Bypass splunk SAML using http://localhost:9000/account/login?loginType=splunk ( admin/password )
+
+For other users - see resources/ldap-ldif/main.ldif
+
+BEWARE
+======
+The SAML dance happens in your browser.
+Splunk doesnt talk to keycloak directly.
+The redirect URIs *WILL* break if you alter the exposed ports the containers listen on
+
+FUN STUFF
+=========
+
+For more security, enable MFA with one-time-passcodes
+
+1. log into keycloak
+2. Browse to the apps domain
+3. Authentication -> Flows -> Browser
+4. Set 'Browser -> Conditional OTP' to 'Required'
+5. Log out and in of splunk
+
+You will need to register the app in Microsoft authenticator on your mobile.
+Its as simple as scanning a barcode.
+

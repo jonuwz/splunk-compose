@@ -1,0 +1,183 @@
+# ------------------------------------------------------------------------------
+#   Create Organizational Units
+# ------------------------------------------------------------------------------
+
+dn: ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+objectclass: organizationalUnit
+ou: groups
+
+dn: ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+objectclass: organizationalUnit
+ou: apps
+
+dn: ou=splunk,ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+objectclass: organizationalUnit
+ou: splunk
+
+dn: ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectclass: organizationalUnit
+ou: people
+
+
+# ------------------------------------------------------------------------------
+#   Create Posix Accounts
+# ------------------------------------------------------------------------------
+
+dn: uid=pettigrb,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Branden Pettigrew
+sn: Pettigrew
+givenName: Branden
+uid: pettigrb
+userpassword: password
+mail: Branden.Pettigrew@{{ LDAP_DOMAIN }}
+
+dn: uid=everills,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Stella Everill
+sn: Everill
+givenName: Stella
+uid: everills
+userpassword: password
+mail: Stella.Everill@{{ LDAP_DOMAIN }}
+
+dn: uid=rogersos,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Sandie Rogerson
+sn: Rogerson
+givenName: Sandie
+uid: rogersos
+userpassword: password
+mail: Sandie.Rogerson@{{ LDAP_DOMAIN }}
+
+dn: uid=donaldsk,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Karolyn Donaldson
+sn: Donaldson
+givenName: Karolyn
+uid: donaldsk
+userpassword: password
+mail: Karolyn.Donaldson@{{ LDAP_DOMAIN }}
+
+dn: uid=brandr,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: River Brand
+sn: Brand
+givenName: River
+uid: brandr
+userpassword: password
+mail: River.Brand@{{ LDAP_DOMAIN }}
+
+dn: uid=comstocp,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Petra Comstock
+sn: Comstock
+givenName: Petra
+uid: comstocp
+userpassword: password
+mail: Petra.Comstock@{{ LDAP_DOMAIN }}
+
+dn: uid=hillams,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Salem Hillam
+sn: Hillam
+givenName: Salem
+uid: hillams
+userpassword: password
+mail: Salem.Hillam@{{ LDAP_DOMAIN }}
+
+dn: uid=youngev,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Valary Younge
+sn: Younge
+givenName: Valary
+uid: youngev
+userpassword: password
+mail: Valary.Younge@{{ LDAP_DOMAIN }}
+
+dn: uid=stonea,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Arnold Stone
+sn: Stone
+givenName: Arnold
+uid: stonea
+userpassword: password
+mail: Arnold.Stone@{{ LDAP_DOMAIN }}
+
+dn: uid=summera,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Amanda Summer
+sn: Summer
+givenName: Amanda
+uid: summera
+userpassword: password
+mail: Amanda.Summer@{{ LDAP_DOMAIN }}
+
+dn: uid=splunkadmin,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Splunk Admin
+sn: Admin
+givenName: Splunk
+uid: splunkadmin
+userpassword: password
+mail: Splunk.Admin@{{ LDAP_DOMAIN }}
+
+# ------------------------------------------------------------------------------
+#   Create Posix Groups
+# ------------------------------------------------------------------------------
+
+dn: cn=user,ou=splunk,ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+cn: user
+objectclass: top
+objectClass: groupOfUniqueNames
+uniqueMember: uid=pettigrb,ou=people,{{ LDAP_BASE_DN }}
+uniqueMember: uid=everills,ou=people,{{ LDAP_BASE_DN }}
+uniqueMember: uid=rogersos,ou=people,{{ LDAP_BASE_DN }}
+uniqueMember: uid=donaldsk,ou=people,{{ LDAP_BASE_DN }}
+uniqueMember: uid=brandr,ou=people,{{ LDAP_BASE_DN }}
+uniqueMember: uid=comstocp,ou=people,{{ LDAP_BASE_DN }}
+uniqueMember: uid=hillams,ou=people,{{ LDAP_BASE_DN }}
+uniqueMember: uid=youngev,ou=people,{{ LDAP_BASE_DN }}
+
+dn: cn=power,ou=splunk,ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+cn: power
+objectclass: top
+objectClass: groupOfUniqueNames
+uniqueMember: uid=stonea,ou=people,{{ LDAP_BASE_DN }}
+uniqueMember: uid=summera,ou=people,{{ LDAP_BASE_DN }}
+
+dn: cn=admin,ou=splunk,ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+cn: admin
+objectclass: top
+objectClass: groupOfUniqueNames
+uniqueMember: uid=splunkadmin,ou=people,{{ LDAP_BASE_DN }}
+
