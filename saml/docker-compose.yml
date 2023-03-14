@@ -51,9 +51,9 @@ services:
       SPLUNK_PASSWORD: password
       SPLUNK_HEC_TOKEN: password
     volumes:
-    - ./resources/splunk/splunk-etc/auth/scripts/SAML_script_keycloak.py:/opt/splunk-etc/auth/scripts/SAML_script_keycloak.py
-    - ./resources/splunk/splunk-etc/auth/splunksaml.pem:/opt/splunk-etc/auth/splunksaml.pem
-    - ./resources/splunk/splunk-etc/auth/idpCerts:/opt/splunk-etc/auth/idpCerts
-    - ./resources/splunk/splunk-etc/system/local/authentication.conf:/opt/splunk-etc/system/local/authentication.conf
+    - ./resources/splunk/splunk-etc/auth/scripts/SAML_script_keycloak.py:/opt/splunk-etc/auth/scripts/SAML_script_keycloak.py:ro
+    - ./resources/splunk/splunk-etc/auth/splunksaml.pem:/opt/splunk-etc/auth/splunksaml.pem:ro
+    - ./resources/splunk/splunk-etc/auth/idpCerts:/opt/splunk-etc/auth/idpCerts:ro
+    - ./resources/splunk/splunk-etc/system/local/authentication.conf:/opt/splunk-etc/system/local/authentication.conf:ro
     depends_on:
     - skeycloak
