@@ -15,6 +15,8 @@ keycloak (an opensource idp sponsored by redhat)
 splunk 
 openldap
 
+a custom authentication extension script - might not be needed - works well enough without
+
 NOTES
 =====
 Splunk sends signed SAML requests to keycloak
@@ -54,3 +56,8 @@ For more security, enable MFA with one-time-passcodes
 You will need to register the app in Microsoft authenticator on your mobile.
 Its as simple as scanning a barcode.
 
+BUGS
+====
+
+importing a keycloak realm ignores the scoping of client mappers
+apps realm -> Client -> splunk -> Client scopes -> splunk-dedicated -> Scope -> Full scope allowed should be false
