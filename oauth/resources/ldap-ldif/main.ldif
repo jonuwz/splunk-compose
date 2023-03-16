@@ -1,0 +1,87 @@
+# ------------------------------------------------------------------------------
+#   Create Organizational Units
+# ------------------------------------------------------------------------------
+
+dn: ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+objectclass: organizationalUnit
+ou: groups
+
+dn: ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+objectclass: organizationalUnit
+ou: apps
+
+dn: ou=splunk,ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+objectclass: organizationalUnit
+ou: splunk
+
+dn: ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectclass: organizationalUnit
+ou: people
+
+
+# ------------------------------------------------------------------------------
+#   Create Posix Accounts
+# ------------------------------------------------------------------------------
+
+dn: uid=splunkadmin,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Splunk Admin
+sn: Admin
+givenName: Splunk
+uid: splunkadmin
+userpassword: password
+mail: Splunk.Admin@{{ LDAP_DOMAIN }}
+
+dn: uid=splunkpower,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Splunk Power
+sn: Power
+givenName: Splunk
+uid: splunkpower
+userpassword: password
+mail: Splunk.Power@{{ LDAP_DOMAIN }}
+
+dn: uid=splunkuser,ou=people,{{ LDAP_BASE_DN }}
+changetype: add
+objectClass: inetOrgPerson
+objectClass: person
+cn: Splunk User
+sn: User
+givenName: Splunk
+uid: splunkuser
+userpassword: password
+mail: Splunk.User@{{ LDAP_DOMAIN }}
+
+# ------------------------------------------------------------------------------
+#   Create Posix Groups
+# ------------------------------------------------------------------------------
+
+dn: cn=user,ou=splunk,ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+cn: user
+objectclass: top
+objectClass: groupOfUniqueNames
+uniqueMember: uid=splunkuser,ou=people,{{ LDAP_BASE_DN }}
+
+dn: cn=power,ou=splunk,ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+cn: power
+objectclass: top
+objectClass: groupOfUniqueNames
+uniqueMember: uid=splunkpower,ou=people,{{ LDAP_BASE_DN }}
+
+dn: cn=admin,ou=splunk,ou=apps,ou=groups,{{ LDAP_BASE_DN }}
+changetype: add
+cn: admin
+objectclass: top
+objectClass: groupOfUniqueNames
+uniqueMember: uid=splunkadmin,ou=people,{{ LDAP_BASE_DN }}
+
