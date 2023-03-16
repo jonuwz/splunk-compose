@@ -1,0 +1,67 @@
+WHAT
+====
+
+Query splunk using a JWT you got from an Oauth2 provider by presening a client certificate.
+
+RUNNING
+=======
+
+You need keytool and jq
+
+./prep.sh
+docker compose up -d
+
+USING
+=====
+
+The password for all services is admin/password 
+
+# Create a certificate for the user 'splunkuser', generate a splunk token for that user and make the proxy aware of the token
+./register_user.sh splunkpower
+
+# Query splunk
+curl -s http://localhost:9000/services/authentication/users?output_mode=json \
+-H "Authorization: Bearer $(curl https://localhost:8443/realms/api/protocol/openid-connect/token -d grant_type=password -d client_id=splunk --cert certs/splunkpower.p12:password --cert-type P12 --cacert certs/ca.crt -s | jq -r .access_token)" \
+| jq '.entry[0].content.realname'
+
+EXPLAINER
+=========
+
+LDAP contains a set of users 
+* splunkadmin
+* splunkpower
+* splunkuser
+
+Keycloak acts as an OIDC identity provider. Identities are federated to LDAP
+You can request an access token for a user by hitting the token endpoint and presenting a client cert.
+The client cert is signed by a CA that keycloak trusts
+Keycloak extracts the CN of the certificate and checks the user exists.
+
+If it does - you get a JWT back
+
+You can then query splunk using the JWT via the apache proxy.
+
+Why an apache proxy ?
+
+Splunk has no way to verify the signature of the JWT provided by keycloak so we have to replace the Authoriaztion header with something that splunk does understand
+
+Keycloak signs the JWT with an RSA private key.
+We load the RSA public key into apache so that it can verify the signature of the recieved JWT.
+(see https://github.com/AnthonyDeroche/mod_authnz_jwt)
+We extract the 'username' component of the assertion.
+
+A lookup table exists in apache that maps username to a Splunk generated token
+
+We swap out the Authorization token and forward to splunk
+
+WHY ?
+=====
+
+Fun. There's a lot of variations on this.
+* Pure mTLS authentication to splunkd
+* Instead of a lookup, you could use mod_rewrite to dynamically generate a short lived splunk token
+
+BUGS
+====
+
+For some reason registering the 'splunkadmin' account causes the token to be associated with the local 'admin' account.

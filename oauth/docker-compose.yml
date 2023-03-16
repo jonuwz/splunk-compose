@@ -48,14 +48,20 @@ services:
 
   oproxy:
     image: httpjwt:latest
+    build:
+      context: ./resources/apache-conf
+      network: host
     container_name: oproxy
     hostname: oproxy
     ports:
     - 9000:9000
     volumes:
     - ./resources/apache-conf/httpd.conf:/usr/local/apache2/conf/httpd.conf
-    - ./resources/apache-conf/rs256:/usr/local/apache2/conf/rs256
-    - ./resources/apache-conf/tokens:/usr/local/apache2/conf/tokens
+    - ./certs/jwt.pub:/usr/local/apache2/conf/rs256
+    - ./certs/splunk_token_lookup:/usr/local/apache2/conf/tokens
+    - type: bind
+      source: ./certs/splunk_tokens
+      target: /usr/local/apache2/conf/splunk_tokens
     depends_on:
     - osplunk
     - okeycloak

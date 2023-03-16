@@ -4,5 +4,3 @@ saml/resources/splunk/splunk-etc/auth/idpCerts
 saml/resources/splunk/splunk-etc/auth/*.pem
 oauth/certs/*
 oauth/resources/realms/*.json
-oauth/resources/apache-conf/tokens
-oauth/resources/apache-conf/rs256
