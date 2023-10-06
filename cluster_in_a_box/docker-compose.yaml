@@ -1,0 +1,106 @@
+version: '3.9'
+name: s
+
+x-splunk: &splunkimage
+  image: local/splunk:9.0.4
+  build:
+    context: ../.images/splunk
+    network: host
+    args:
+      VERSION: 9.0.4
+      TOOL: splunk
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+  entrypoint: >
+    /usr/bin/bash -c '
+      [[ -e /var/run/docker.sock ]] && export SPLUNK_HOSTNAME=$( curl -s --unix-socket /var/run/docker.sock http://x/containers/$(hostname)/json | python -c '"'"'import json,sys;print(json.load(sys.stdin)["Name"][1:])'"'"')
+      exec /sbin/entrypoint.sh start'
+
+x-envs:
+  default: &splunkdefaultenv
+    LANG: en_US.utf8
+    SPLUNK_PASSWORD: password
+    SPLUNK_DISABLE_POPUPS: "true"
+    SPLUNK_START_ARGS: --accept-license
+    SPLUNK_CLUSTER_MASTER_URL: cm
+  discovery: &discovery
+    SPLUNK_IDXC_DISCOVERYPASS4SYMMKEY: cm_and_forwarder_comms
+  indexer: &indexer
+    SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
+  shc: &shc
+    SPLUNK_DEPLOYER_URL: deployer
+    SPLUNK_SHC_LABEL: docker_shc
+    SPLUNK_SHC_PASS4SYMMKEY: shc_comms
+    SPLUNK_SEARCH_HEAD_CAPTAIN_URL: ${COMPOSE_PROJECT_NAME}-shc-1
+    SPLUNK_SEARCH_HEAD_URL:  ${COMPOSE_PROJECT_NAME}-shc-1
+
+services:
+
+  sh:
+    profiles: [ "sh" ]
+    <<: *splunkimage
+    ports: [ "8100:8000", "8189:8089" ]
+    environment:
+      SPLUNK_ROLE: splunk_search_head
+      <<: [ *splunkdefaultenv, *discovery, *indexer ]
+
+  sh-lb:
+    image: local/haproxy:2.3
+    build:
+      context: ./resources/haproxy
+      network: host
+    profiles: [ "shc" ]
+    depends_on:
+    - shc
+    ports: [ "8000:8000", "8089:8089", "8088:8088", "8404:8404" ]
+    volumes:
+    - ./resources/haproxy:/usr/local/etc/haproxy
+
+  deployer:
+    profiles: [ "shc" ]
+    <<: *splunkimage
+    environment:
+      SPLUNK_ROLE: splunk_deployer
+      <<: [ *splunkdefaultenv, *discovery, *shc ]
+    volumes:
+    - type: bind
+      source: ./resources/shcluster/apps
+      target: /opt/splunk/etc/shcluster/apps
+    depends_on:
+      cm:
+        condition: service_healthy
+
+  cm:
+    <<: *splunkimage
+    ports: [ "8900:8000", "8989:8089" ]
+    environment:
+      SPLUNK_ROLE: splunk_cluster_master
+      <<: [ *splunkdefaultenv, *discovery, *indexer ]
+      SPLUNK_IDXC_REPLICATION_FACTOR: 2
+      SPLUNK_IDXC_SEARCH_FACTOR: 2
+      SPLUNK_IDXC_LABEL: docker_idx
+    volumes:
+    - type: bind
+      source: ./resources/master-apps
+      target: /opt/splunk/etc/master-apps
+
+  idx:
+    <<: *splunkimage
+    environment:
+      SPLUNK_ROLE: splunk_indexer
+      <<: [ *splunkdefaultenv, *indexer ]
+      SPLUNK_HEC_TOKEN: password
+    deploy:
+      replicas: 2
+
+  shc:
+    profiles: [ "shc" ]
+    <<: *splunkimage
+    environment:
+      SPLUNK_ROLE: splunk_search_head
+      <<: [ *splunkdefaultenv, *discovery, *indexer, *shc ]
+    depends_on:
+      deployer:
+        condition: service_healthy
+    deploy:
+      replicas: 1

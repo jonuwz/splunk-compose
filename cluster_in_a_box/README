@@ -1,0 +1,65 @@
+Cluster in a box
+================
+
+This stands up a cluster master and 2 indexers. Search and replication factor is 2
+
+Optionally stands up search heads
+
+Requirements
+============
+
+Your local /var/run/docker.sock MUST be writable by the ansible user in the container
+
+Running
+=======
+
+Just the indexer cluster :
+
+docker compose up -d
+
+With a search head :
+
+docker compose --profile sh up -d 
+
+With a search head cluster :
+
+docker compose --profile shc up -d
+
+Increse number of search heads to 3 :
+
+docker compose --profile shc up --no-recreate --scale shc=3 -d
+
+Connecting
+==========
+
+Splunk UI is available on http://localhost:8000
+Splunkd is available on https://localhost:8089
+
+Cluster master UI is available on http://localhost:8900
+Cluster master splunkd is available on http://localhost:8989
+
+Deploying
+=========
+
+Cluster master:
+
+Cluster masters /opt/splunk/etc/master-apps will be bind mounted to ./resources/master-apps
+If ./resources/master-apps is empty, the _cluster app will be copied from the container
+
+This will be preserved across container destruction. Be sure to remove the contents if you change versions.
+
+To apply a bundle
+
+docker exec --user splunk cm1 /opt/splunk/bin/splunk apply cluster-bundle -auth admin:password --answer-yes
+
+Deployer :
+
+If using an search head cluster, the deployers /opt/splunk/etc/shcluster/apps will be bind mounted to ./resources/shcluster/apps
+
+This will be preserved across container destruction. Be sure to remove the contents if you want a clean start
+
+To apply a bundle
+
+docker exec --user splunk deployer /opt/splunk/bin/splunk apply shcluster-bundle -target https://shc1:8089 -auth admin:password --answer-yes
+
+
