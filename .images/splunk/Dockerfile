@@ -80,3 +80,5 @@ RUN if [[ -e /opt/splunk-etc ]];then \
         microdnf clean all; fi
 
 USER ansible
+
+ADD ./ansible-defaults.py /opt/ansible/ansible-defaults.py
