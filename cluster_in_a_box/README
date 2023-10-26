@@ -23,11 +23,11 @@ docker compose --profile sh up -d
 
 With a search head cluster :
 
-docker compose --profile shc up -d
+docker compose --profile shc1 up -d
 
 Increse number of search heads to 3 :
 
-docker compose --profile shc up --no-recreate --scale shc=3 -d
+docker compose --profile shc1 up --no-recreate --scale shc1=3 -d
 
 Connecting
 ==========
@@ -50,7 +50,7 @@ This will be preserved across container destruction. Be sure to remove the conte
 
 To apply a bundle
 
-docker exec --user splunk cm1 /opt/splunk/bin/splunk apply cluster-bundle -auth admin:password --answer-yes
+docker exec --user splunk s-cm1-1 /opt/splunk/bin/splunk apply cluster-bundle -auth admin:password --answer-yes
 
 Deployer :
 
@@ -60,6 +60,6 @@ This will be preserved across container destruction. Be sure to remove the conte
 
 To apply a bundle
 
-docker exec --user splunk deployer /opt/splunk/bin/splunk apply shcluster-bundle -target https://shc1:8089 -auth admin:password --answer-yes
+docker exec --user splunk s-shc1-1 /opt/splunk/bin/splunk apply shcluster-bundle -target https://s-shc-1:8089 -auth admin:password --answer-yes
 
 
