@@ -1,0 +1,37 @@
+let ADD_PER=50
+let SPLIT=5
+let ADD_PER_SPLIT=$((ADD_PER/SPLIT))
+
+let RUNNING=$(docker ps | wc -l)
+let RUNNING_PER_SPLIT=$((RUNNING/SPLIT))
+
+let WANT=${1?"need a target"}
+let CURRENT_ITER=$((RUNNING/ADD_PER))
+let MAX_ITER=$((WANT/ADD_PER))
+
+echo add_per_split=$ADD_PER_SPLIT running=$RUNNING current_iter=$CURRENT_ITER max_iter=$MAX_ITER
+
+let CURRENT_ITER=$CURRENT_ITER+1
+
+while (( $RUNNING <= $WANT)); do
+
+  let NUM_PER_SPLIT=$((CURRENT_ITER*ADD_PER_SPLIT))
+  docker compose up --no-recreate \
+     --scale sdf0=$NUM_PER_SPLIT \
+     --scale sdf1=$NUM_PER_SPLIT \
+     --scale sdf2=$NUM_PER_SPLIT \
+     --scale sdf3=$NUM_PER_SPLIT \
+     --scale sdf4=$NUM_PER_SPLIT \
+     -d >/dev/null 2>&1 &
+
+  until (( $RUNNING >= $((CURRENT_ITER*ADD_PER)) ));do
+    sleep 5
+    echo -n -e "\r$(date) target=$WANT num_per_split=$NUM_PER_SPLIT running=$RUNNING of $((CURRENT_ITER*ADD_PER))"
+    RUNNING=$(docker ps | wc -l)
+  done
+ 
+  let CURRENT_ITER=$CURRENT_ITER+1
+  
+done
+
+echo

@@ -1,0 +1,150 @@
+version: '3.9'
+
+name: "d"
+
+networks:
+  dn0: {}
+  dn1: {}
+  dn2: {}
+  dn3: {}
+  dn4: {}
+
+services:
+
+  sds:
+    image: splunk/splunk:9.2.0.1
+    networks: [ dn0, dn1, dn2, dn3, dn4 ]
+    container_name: sds
+    hostname: sds
+    ports:
+    - "8000:8000"
+    - "8089:8089"
+    environment:
+      SPLUNK_DISABLE_POPUPS: "true"
+      LANG: en_US.utf8
+      SPLUNK_ROLE: splunk_standalone
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_PASSWORD: password
+
+  sddbe:
+    image: local/ds:9.2.0.1
+    build:
+      context: ./images/deployment_server
+      args:
+        ASSET: splunk-9.2.0.1-d8ae995bf219-Linux-x86_64.tgz
+    networks: [ dn0 ]
+    ports:
+    - "8000"
+    environment:
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+      SPLUNK_DS_HA: "true"
+    volumes:
+    - "./resources/scripts:/opt/scripts"
+    - type: bind
+      source: ./splunk_home/etc/deployment-apps
+      target: /opt/splunk/etc/deployment-apps
+    - type: bind
+      source: ./splunk_home/var/log/client_events
+      target: /opt/splunk/var/log/client_events
+    ulimits:
+      nofile:
+        soft: 536870908
+        hard: 536870908
+    deploy:
+      replicas: 4
+
+  sdd:
+    image: local/haproxy:2.8-ds
+    networks: [ dn0, dn1, dn2, dn3, dn4 ]
+    build:
+      context: ./resources/haproxy
+      network: host
+    depends_on:
+    - sddbe
+    hostname: sdd
+    container_name: sdd
+    ports: [ "8189:8089", "8504:8404" ]
+    volumes:
+    - ./resources/haproxy:/usr/local/etc/haproxy
+
+  sdf0:
+    image: local/uf:9.0.4
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    networks: [ dn0 ]
+    build:
+      context: ./images/unversal_forwarder
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    deploy:
+      replicas: 1
+
+  sdf1:
+    image: local/uf:9.0.4
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    networks: [ dn1 ]
+    build:
+      context: ./images/unversal_forwarder
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    deploy:
+      replicas: 1
+
+  sdf2:
+    image: local/uf:9.0.4
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    networks: [ dn2 ]
+    build:
+      context: ./images/unversal_forwarder
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    deploy:
+      replicas: 1
+
+  sdf3:
+    image: local/uf:9.0.4
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    networks: [ dn3 ]
+    build:
+      context: ./images/unversal_forwarder
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    deploy:
+      replicas: 1
+
+  sdf4:
+    image: local/uf:9.0.4
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    networks: [ dn4 ]
+    build:
+      context: ./images/unversal_forwarder
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    deploy:
+      replicas: 1
+

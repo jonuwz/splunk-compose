@@ -1,0 +1,56 @@
+#!/bin/bash
+
+SPLUNK_PASSWORD=${SPLUNK_PASSWORD-password}
+
+if [[ ! -z $SPLUNK_INDEXER_URL ]] && [[ ! -e /opt/splunk/etc/system/local/outputs.conf ]] ;then
+
+
+cat <<EOF > /opt/splunk/etc/system/local/outputs.conf
+[indexAndForward]
+index = true
+selectiveIndexing = true
+
+[tcpout]
+defaultGroup = default-autolb-group
+
+[tcpout:default-autolb-group]
+server = ${SPLUNK_INDEXER_URL}:9997
+
+[tcpout-server://${SPLUNK_INDEXER_URL}:9997]
+EOF
+
+
+fi
+
+if [[ ! -e /opt/splunk/etc/system/local/user-seed.conf ]];then
+
+
+cat <<EOF > /opt/splunk/etc/system/local/user-seed.conf
+[user_info]
+USERNAME = admin
+PASSWORD = ${SPLUNK_PASSWORD}
+EOF
+
+
+fi
+
+
+if [[ ! -z $SPLUNK_DS_HA ]];then
+
+mkdir -p /opt/splunk/etc/apps/search/local
+cat <<EOF > /opt/splunk/etc/apps/search/local/serverclass.conf
+[global]
+syncMode = sharedDir
+EOF
+
+fi
+
+faketty () {
+  script -qefc "$(printf "%q " "$@")" /dev/null
+}
+
+faketty /opt/splunk/bin/splunk start --accept-license
+sleep 60
+tail -n 0 -f /opt/splunk/var/log/splunk/splunkd_stderr.log &
+wait
+
