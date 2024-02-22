@@ -45,7 +45,7 @@ async def main():
     
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
 
-        print(f"\nconcurrency={concurrent} clients={clients}\n\nclient registrations") # spam all the registrations at the same time. fast
+        print(f"\nserver={stub} concurrency={concurrent} clients={clients}\n\nclient registrations") # spam all the registrations at the same time. fast
         conns = await tqdm_asyncio.gather( *[register(session, f"host{tid}") for tid in range(clients)] )
 
         print("client query apps") # get apps for all clients. slow
