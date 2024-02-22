@@ -8,7 +8,7 @@ clients = int(sys.argv[1]) if len(sys.argv) > 0 else 1000   # how many clients t
 concurrent = int(sys.argv[2]) if len(sys.argv) > 1 else 10  # max connections from this script at a time
 
 limit = asyncio.Semaphore(concurrent)  # limit the number of http calls
-stub='http://localhost:8080/services/broker'
+stub='http://localhost:8089/services/broker'
 ping_payload = '<?xml version="1.0" encoding="UTF-8"?><messages/>'
 handshake_payload = '<?xml version="1.0" encoding="UTF-8"?><messages><publish channel="tenantService/handshake">&lt;handshake/&gt;</publish></messages>'
 topic_payload = '<?xml version="1.0" encoding="UTF-8"?><messages><publish channel="deploymentServer/phoneHome/default">&lt;phonehome token="default"/&gt;</publish></messages>'
