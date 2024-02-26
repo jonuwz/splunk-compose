@@ -23,7 +23,7 @@ time docker exec d-sdf0-1 /opt/scripts/client_load.py 10
 
 This will grab the connection string from splunkd.log and publish to the deploymentServer/phoneHome/default channel.  
 i.e. this is the bit that the deploymentclient does every phoneHomeInterval to look for apps.  
-It will phone home 100 times, and print the timings.  
+It will phone home 10 times, and print the timings.  
 
 ```bash
 10 / 10 in 2.280. 1st call 0.249 avg 0.228 connection: connection_172.22.0.2_8089_d-sdf0-1.d_dn0_a4f05fdf1d67_F5F741C6-838F-468C-A4AA-A34B7702B57D
