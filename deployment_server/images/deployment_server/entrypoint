@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SPLUNK_PASSWORD=${SPLUNK_PASSWORD-password}
+SPLUNK_SPLUNKD_SSL=${SPLUNK_SPLUNKD_SSL-1}
 
 if [[ ! -z $SPLUNK_INDEXER_URL ]] && [[ ! -e /opt/splunk/etc/system/local/outputs.conf ]] ;then
 
@@ -17,6 +18,18 @@ defaultGroup = default-autolb-group
 server = ${SPLUNK_INDEXER_URL}:9997
 
 [tcpout-server://${SPLUNK_INDEXER_URL}:9997]
+EOF
+
+
+fi
+
+if [[ $SPLUNK_SPLUNKD_SSL == "0" ]];then
+
+
+mkdir -p /opt/splunk/etc/apps/search/local
+cat <<EOF > /opt/splunk/etc/apps/search/local/server.conf
+[sslConfig]
+enableSplunkdSSL = false
 EOF
 
 

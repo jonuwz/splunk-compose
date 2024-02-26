@@ -28,6 +28,9 @@ while [[ $# -gt 0 ]];do
     --reserved)
       let RESERVED=$1;shift;shif
       ;;
+    --aio)
+      AIO=1;shift
+      ;;
     *)
       usage
       exit 1
@@ -63,9 +66,11 @@ EOF
 }  # end create_app
 
 sc_preamble() {
-  echo "[global]"
-  echo "syncMode=sharedDir"
-  echo 
+  if [[ ! -z $SPLUNK_DS_HA ]];then
+    echo "[global]"
+    echo "syncMode=sharedDir"
+    echo 
+  fi
   echo "[serverClass:all]"
   echo "whitelist.0 = *"
   echo
@@ -90,10 +95,22 @@ create_sc() {
   local sc=$(printf "sc-%05d" $scnum)
   echo "[serverClass:$sc]"
 
-  for i in $(seq 1 $REGEX);do
-    j=$((i-1))
-    printf "whitelist.$j = *${sc}_nope0%03d*\n" $j
-  done
+  if [[ ! -z $AIO ]];then
+    for i in $(seq 1 $REGEX);do
+      j=$((i-1))
+      if (( $j%100 == 0 ));then
+        echo -en "\nwhitelist.$((j/100)) = "
+      fi
+      printf "(?:*${sc}_nope0%03d*)" $j
+      (( $i%100 != 0 )) && [[ $i != $REGEX ]] && echo -n "|"
+    done
+    echo
+  else
+    for i in $(seq 1 $REGEX);do
+      j=$((i-1))
+      printf "whitelist.$j = *${sc}_nope0%03d*\n" $j
+    done
+  fi
 
   if [[ ! -z $SHUFFLE ]];then
     #randomize the apps per class

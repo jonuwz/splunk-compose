@@ -1,0 +1,117 @@
+version: '3.9'
+
+name: "d"
+
+networks:
+  dn0: {}
+  dn1: {}
+  dn2: {}
+  dn3: {}
+  dn4: {}
+
+services:
+
+  sds:
+    image: splunk/splunk:9.2.0.1
+    networks: [ dn0, dn1, dn2, dn3, dn4 ]
+    container_name: sds
+    hostname: sds
+    ports:
+    - "8000:8000"
+    - "8089:8089"
+    environment:
+      SPLUNK_DISABLE_POPUPS: "true"
+      LANG: en_US.utf8
+      SPLUNK_ROLE: splunk_standalone
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_PASSWORD: password
+
+  sdd:
+    image: local/ds:9.2.0.1
+    networks: [ dn0, dn1, dn2, dn3, dn4 ]
+    container_name: sdd
+    hostname: sdd
+    build:
+      context: ./images/deployment_server
+      args:
+        ASSET: splunk-9.2.0.1-d8ae995bf219-Linux-x86_64.tgz
+    ports:
+    - "8010:8000"
+    - "8189:8089"
+    environment:
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+      SPLUNK_SPLUNKD_SSL: "0"
+    volumes:
+    - "./resources/scripts:/opt/scripts"
+    entrypoint: bash -c '/opt/scripts/gendsconf --apps 10 --classes 10 --regex 20000 > /opt/splunk/etc/system/local/serverclass.conf && /sbin/entrypoint'
+
+  sdf0:
+    image: local/uf:9.0.4
+    networks: [ dn0 ]
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: http://sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    volumes:
+    - ./resources/scripts:/opt/scripts
+
+  sdf1:
+    image: local/uf:9.0.4
+    networks: [ dn1 ]
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: http://sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    volumes:
+    - ./resources/scripts:/opt/scripts
+
+  sdf2:
+    image: local/uf:9.0.4
+    networks: [ dn2 ]
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: http://sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    volumes:
+    - ./resources/scripts:/opt/scripts
+
+  sdf3:
+    image: local/uf:9.0.4
+    networks: [ dn3 ]
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: http://sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    volumes:
+    - ./resources/scripts:/opt/scripts
+
+  sdf4:
+    image: local/uf:9.0.4
+    networks: [ dn4 ]
+    build:
+      context: ./images/universal_forwarder
+      args:
+        ASSET: splunkforwarder-9.0.4-de405f4a7979-Linux-x86_64.tgz
+    environment:
+      SPLUNK_DEPLOYMENT_SERVER: http://sdd
+      SPLUNK_PASSWORD: password
+      SPLUNK_INDEXER_URL: sds
+    volumes:
+    - ./resources/scripts:/opt/scripts

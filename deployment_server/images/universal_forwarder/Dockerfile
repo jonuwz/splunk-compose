@@ -9,7 +9,7 @@ RUN tar -xf /tmp/splunkforwarder.tgz -C /opt
 
 RUN chown -R splunk:splunk /opt/splunkforwarder && rm /tmp/splunkforwarder.tgz
 
-RUN apt update && apt install -y curl vim jq net-tools iproute2 && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y curl python3 python3-requests vim jq net-tools iproute2 && rm -rf /var/lib/apt/lists/*
 
 COPY ./entrypoint /sbin/entrypoint
 
