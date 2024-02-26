@@ -1,0 +1,56 @@
+# Requirements
+place the tgz for splunk 9.2.0.1 in images/deployment_Server  
+place the tgz for universal forwarder 9.0.4 in images/universal_forwarder
+
+# Running
+```bash
+docker compose -f debug-compose.yaml up -d
+```
+This will create a deployment server with serverclass.conf containing 200K whitelists.  
+Yes this is absurd, but it makes performance testing more obvious.  
+
+# Vailidation
+connect to :8010 and login with admin/password.  
+wait till you see 5 connected clients.  
+
+# testing
+
+## single client
+
+```bash
+time docker exec d-sdf0-1 /opt/scripts/client_load.py 10
+```
+
+This will grab the connection string from splunkd.log and publish to the deploymentServer/phoneHome/default channel.  
+i.e. this is the bit that the deploymentclient does every phoneHomeInterval to look for apps.  
+It will phone home 100 times, and print the timings.  
+
+```bash
+10 / 10 in 2.280. 1st call 0.249 avg 0.228 connection: connection_172.22.0.2_8089_d-sdf0-1.d_dn0_a4f05fdf1d67_F5F741C6-838F-468C-A4AA-A34B7702B57D
+
+real    0m2.422s
+user    0m0.007s
+sys     0m0.007s
+```
+
+## multiple clients
+```bash
+time ( for i in {0..4};do (docker exec d-sdf${i}-1 python3 /opt/scripts/client_load.py 10 ) &done ;wait )
+```
+This will concurrently run the script on 5 deployment clients.  
+
+If there's any parallelism at all, this should take < 5*the time for a single client.
+
+```bash
+10 / 10 in 10.270. 1st call 0.382 avg 1.027 connection: connection_172.21.0.2_8089_d-sdf4-1.d_dn4_3eafea1e85d0_9D99D8D7-ADFB-4C53-9980-C1D77F800E3D
+10 / 10 in 10.507. 1st call 0.629 avg 1.051 connection: connection_172.24.0.2_8089_d-sdf1-1.d_dn1_51a43869cdaf_25E94239-1F6B-40AD-8E25-6C4D0DB0C17F
+10 / 10 in 10.725. 1st call 0.848 avg 1.072 connection: connection_172.22.0.2_8089_d-sdf0-1.d_dn0_a4f05fdf1d67_F5F741C6-838F-468C-A4AA-A34B7702B57D
+10 / 10 in 10.936. 1st call 1.072 avg 1.094 connection: connection_172.19.0.2_8089_d-sdf2-1.d_dn2_c5b2677b1dcd_DD848CCA-627F-4995-8B47-3F782E06FBA0
+10 / 10 in 11.138. 1st call 1.275 avg 1.114 connection: connection_172.20.0.2_8089_d-sdf3-1.d_dn3_916d479a9789_E52CBB92-D57C-4ED6-94F8-2C5EF7B4D0EC
+
+real    0m11.294s
+user    0m0.021s
+sys     0m0.055s
+```
+
+Not really
