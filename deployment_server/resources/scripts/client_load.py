@@ -11,7 +11,6 @@ with open('/opt/splunkforwarder/var/log/splunk/splunkd.log') as log:
             break
 
 url = f"{os.environ['SPLUNK_DEPLOYMENT_SERVER']}:8089/services/broker/phonehome/{conn}"
-print(url)
 headers = { 'Content-type': 'text/xml; charset=UTF-8' }
 payload = '<messages><publish channel="deploymentServer/phoneHome/default">&lt;phonehome token="default"/&gt;</publish></messages>'
 
@@ -30,4 +29,4 @@ for i in range(iters):
 
 dur=time.time()-start
 
-print(f"{good} / {iters} in {dur:.3f}. 1st call {first_iter_dur:.3f} avg {dur/iters:.3f}")
+print(f"{good} / {iters} in {dur:.3f}. 1st call {first_iter_dur:.3f} avg {dur/iters:.3f} connection: {conn}")
