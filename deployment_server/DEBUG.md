@@ -36,7 +36,7 @@ sys     0m0.007s
 Note that there is no speedup. Each call is just as slow as the first.  
 This is the same result as allowing the clients to reach steady state, then running
 ```bash
-index=_internal sourcetype=splunkd_access uri_path=/services/broker/* | bin_time span=1m | xyseries _time uri_path spent
+index=_internal sourcetype=splunkd_access uri_path=/services/broker/* bytes>500| bin_time span=1m | xyseries _time uri_path spent
 ```
 
 
