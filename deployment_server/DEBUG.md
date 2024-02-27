@@ -4,12 +4,22 @@ place the tgz for universal forwarder 9.0.4 in images/universal_forwarder
 
 # Running
 ```bash
-docker compose -f debug-compose.yaml up -d
+docker compose -f debug-compose.yaml up sds sdd -d
 ```
-This will create a deployment server with serverclass.conf containing 200K whitelists.  
+This will create a deployment server listening on port 8010.  
+This will create a standalone splunk mahcine for indexing on port 8000.  
+
+The deployment server will have a serverclas.conf with 200K regular expressions.  
 Yes this is absurd, but it makes performance testing more obvious.  
 
-# Vailidation
+Wait until you can connect to the deployment server over the UI.  
+
+Now start the clients
+```bash
+docker compose -f debug-compose.yaml up sdf0 sdf1 sdf2 sdf3 sdf4 -d
+```
+
+# Validation
 connect to :8010 and login with admin/password.  
 wait till you see 5 connected clients.  
 
