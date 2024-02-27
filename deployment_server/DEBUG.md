@@ -71,3 +71,25 @@ sys     0m0.055s
 ```
 
 Not really
+
+## Simulated load.
+```bash
+./load.py 100 100
+```
+
+This will simulate as well as i know how, 100 'new' hosts, register them fully, then publish to the deploymentServer/phoneHome/default channel.  
+The publishing does 100 concurrently.  
+
+if you now run
+
+```bash
+index=_internal sourcetype=splunkd_access uri_path=/services/broker/phonehome/* bytes>500 host* 
+| stats latest(spent) as spent by uri_path 
+| sort 0 - spent 
+| eventstats min(spent) as fastest_request 
+| eval order = round(spent/fastest_request)
+```
+
+it should be obvious that the deploment server accepts all the connections, then processes them sequentially.  
+
+
