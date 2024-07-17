@@ -1,4 +1,4 @@
-version: '2'
+version: '3.4'
 services:
 
   okeycloak:
@@ -27,7 +27,7 @@ services:
     - oldap
 
   osplunk:
-    image: splunk/splunk:8.2.6
+    image: splunk/splunk:9.0.4.1
     container_name: osplunk
     hostname: osplunk
     ports:
@@ -55,6 +55,7 @@ services:
     hostname: oproxy
     ports:
     - 9000:9000
+    - 8010:8010
     volumes:
     - ./resources/apache-conf/httpd.conf:/usr/local/apache2/conf/httpd.conf
     - ./certs/jwt.pub:/usr/local/apache2/conf/rs256
