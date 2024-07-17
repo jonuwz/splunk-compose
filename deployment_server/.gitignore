@@ -1,0 +1,3 @@
+splunk_home/etc/deployment-apps/**/*.*
+splunk_home/var/log/client_events/*.log
+images/**/*.tgz

@@ -1,0 +1,154 @@
+#!/bin/bash
+
+usage() {
+  echo "$0 --apps [number of apps] --classes [number of server classes] --regex [number of bogus whitelists per class]"
+  exit 0
+}
+
+PERCLASS=5   # number of apps per class
+RESERVED=5   # how many apps to reserve for the main class
+
+while [[ $# -gt 0 ]];do
+  case $1 in
+    -a|--apps)
+      let APPS=$2; shift; shift
+      ;;
+    -c|--classes)
+      let CLASSES=$2; shift; shift
+      ;;
+    -r|--regex)
+      REGEX=$2; shift; shift
+      ;;
+    -p|--appsperclass)
+      let PERCLASS=$2; shift; shift
+      ;;
+    -s|--shuffle)
+      SHUFFLE=1; shift
+      ;;
+    --reserved)
+      let RESERVED=$1;shift;shif
+      ;;
+    --aio)
+      AIO=1;shift
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z $APPS ]] || [[ -z $CLASSES ]] || [[ -z $REGEX ]];then
+  usage
+  exit 1
+fi
+
+MOD=$(( APPS - RESERVED))
+
+create_app() {
+
+local appnum=$1
+local app=$(printf "app-%05d" $appnum)
+local dir="/opt/splunk/etc/deployment-apps/$app/default"
+mkdir -p $dir
+
+echo<<EOF > "$dir/app.conf"
+[ui]
+is_visible = 1
+label = $app
+
+[launcher]
+author = john
+description = $app
+version = 1.0.0
+EOF
+
+}  # end create_app
+
+sc_preamble() {
+  if [[ ! -z $SPLUNK_DS_HA ]];then
+    echo "[global]"
+    echo "syncMode=sharedDir"
+    echo 
+  fi
+  echo "[serverClass:all]"
+  echo "whitelist.0 = *"
+  echo
+  echo "[serverClass:all:app:_splunk_ds_info]"
+  echo "restartSplunkd = true"
+  echo 
+  echo "[serverClass:all:app:_splunk_tmp]"
+  echo "restartSplunkd = true"
+  echo 
+
+  echo "[serverClass:big]"
+  echo "whitelist.0 = *"
+  for i in $(seq 1 $RESERVED);do
+    j=$((i-1))
+    printf "[serverClass:big:app:app-%05d]\n" $j
+  done
+}
+    
+create_sc() {
+  local scnum=$1
+
+  local sc=$(printf "sc-%05d" $scnum)
+  echo "[serverClass:$sc]"
+
+  if [[ ! -z $AIO ]];then
+    for i in $(seq 1 $REGEX);do
+      j=$((i-1))
+      if (( $j%100 == 0 ));then
+        echo -en "\nwhitelist.$((j/100)) = "
+      fi
+      printf "(?:*${sc}_nope0%03d*)" $j
+      (( $i%100 != 0 )) && [[ $i != $REGEX ]] && echo -n "|"
+    done
+    echo
+  else
+    for i in $(seq 1 $REGEX);do
+      j=$((i-1))
+      printf "whitelist.$j = *${sc}_nope0%03d*\n" $j
+    done
+  fi
+
+  if [[ ! -z $SHUFFLE ]];then
+    #randomize the apps per class
+    for i in $(shuf -i 6-$APPS -n $PERCLASS);do
+      j=$((i-1))
+      printf "[serverClass:$sc:app:app-%05d]\n" $j
+    done
+  else
+    # default
+    # we need $RESERVED classes for the 'main class'. 
+    # select the next $PERCLASS serverclasses determinitically
+    local app_start=$((scnum*PERCLASS))
+    local app_end=$((app_start+PERCLASS-1))
+    for i in $(seq $app_start $app_end);do
+      printf "[serverClass:$sc:app:app-%05d]\n" $((RESERVED + (i%MOD) ))
+    done
+  fi
+}
+
+
+main() {
+  # create the apps
+  let c=0
+  while (( $c < $APPS ));do
+    create_app $c
+    c=$((c+1))
+  done
+ 
+  sc_preamble
+  echo 
+  # create the classes
+  let c=0
+  while (( $c < $CLASSES ));do
+    create_sc $c
+    c=$((c+1))
+    echo
+  done
+
+}
+
+main

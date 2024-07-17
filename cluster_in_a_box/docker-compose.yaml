@@ -1,0 +1,185 @@
+version: '3.9'
+name: s
+
+x-splunk: &splunkimage
+  image: local/splunk:9.0.4
+  build:
+    context: ../.images/splunk
+    network: host
+    args:
+      VERSION: 9.0.4
+      TOOL: splunk
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+  entrypoint: >
+    /usr/bin/bash -c 'python /opt/ansible/ansible-defaults.py'
+
+x-envs:
+  default: &splunkdefaultenv
+    LANG: en_US.utf8
+    SPLUNK_PASSWORD: password
+    SPLUNK_DISABLE_POPUPS: "true"
+    SPLUNK_START_ARGS: --accept-license
+    SPLUNK_CLUSTER_MASTER_URL: cm1
+  discovery: &discovery
+    SPLUNK_IDXC_DISCOVERYPASS4SYMMKEY: cm_and_forwarder_comms
+  indexer: &indexer
+    SPLUNK_IDXC_PASS4SYMMKEY: cm_and_indexer_comms
+  shc1: &shc1
+    SPLUNK_DEPLOYER_URL: shc1-dep
+    SPLUNK_SHC_LABEL: docker_shc1
+    SPLUNK_SHC_PASS4SYMMKEY: shc_comms
+    SPLUNK_SEARCH_HEAD_CAPTAIN_URL: ${COMPOSE_PROJECT_NAME}-shc1-1
+    SPLUNK_SEARCH_HEAD_URL: ${COMPOSE_PROJECT_NAME}-shc1-1
+  shc2: &shc2
+    SPLUNK_DEPLOYER_URL: shc2-dep
+    SPLUNK_SHC_LABEL: docker_shc2
+    SPLUNK_SHC_PASS4SYMMKEY: shc_comms
+    SPLUNK_SEARCH_HEAD_CAPTAIN_URL: ${COMPOSE_PROJECT_NAME}-shc2-1
+    SPLUNK_SEARCH_HEAD_URL: ${COMPOSE_PROJECT_NAME}-shc2-1
+
+services:
+
+  sh:
+    profiles: [ "sh" ]
+    <<: *splunkimage
+    ports: [ "8100:8000", "8189:8089" ]
+    environment:
+      SPLUNK_ROLE: splunk_search_head
+      <<: [ *splunkdefaultenv, *discovery, *indexer ]
+
+  sh-lb:
+    image: local/haproxy:2.3
+    build:
+      context: ./resources/haproxy
+      network: host
+    profiles: [ "shc1" ]
+    depends_on:
+    - shc1
+    ports: [ "8000:8000", "8100:8100", "8089:8089", "8088:8088", "8404:8404" ]
+    volumes:
+    - ./resources/haproxy:/usr/local/etc/haproxy
+
+  shc1-dep:
+    profiles: [ "shc1" ]
+    <<: *splunkimage
+    environment:
+      SPLUNK_ROLE: splunk_deployer
+      <<: [ *splunkdefaultenv, *discovery, *shc1 ]
+    volumes:
+    - type: bind
+      source: ./resources/shcluster/apps
+      target: /opt/splunk/etc/shcluster/apps
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      cm1:
+        condition: service_healthy
+
+  shc2-dep:
+    profiles: [ "shc2" ]
+    <<: *splunkimage
+    environment:
+      SPLUNK_ROLE: splunk_deployer
+      <<: [ *splunkdefaultenv, *discovery, *shc2 ]
+    volumes:
+    - type: bind
+      source: ./resources/shcluster/apps
+      target: /opt/splunk/etc/shcluster/apps
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      cm1:
+        condition: service_healthy
+
+  cm1:
+    <<: *splunkimage
+    ports: [ "8900:8000", "8989:8089" ]
+    environment:
+      SPLUNK_ROLE: splunk_cluster_master
+      <<: [ *splunkdefaultenv, *discovery, *indexer ]
+      SPLUNK_IDXC_REPLICATION_FACTOR: 2
+      SPLUNK_IDXC_SEARCH_FACTOR: 2
+      SPLUNK_IDXC_LABEL: docker_idx
+    volumes:
+    - type: bind
+      source: ./resources/master-apps
+      target: /opt/splunk/etc/master-apps
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  idx1:
+    <<: *splunkimage
+    environment:
+      SPLUNK_ROLE: splunk_indexer
+      <<: [ *splunkdefaultenv, *indexer ]
+      SPLUNK_HEC_TOKEN: password
+    deploy:
+      replicas: 2
+
+  shc1:
+    profiles: [ "shc1" ]
+    <<: *splunkimage
+    environment:
+      SPLUNK_ROLE: splunk_search_head
+      <<: [ *splunkdefaultenv, *discovery, *indexer, *shc1 ]
+    depends_on:
+      shc1-dep:
+        condition: service_healthy
+    deploy:
+      replicas: 1
+
+  shc2:
+    profiles: [ "shc2" ]
+    <<: *splunkimage
+    environment:
+      SPLUNK_HTTP_PORT: 8100
+      SPLUNK_ROLE: splunk_search_head
+      <<: [ *splunkdefaultenv, *discovery, *indexer, *shc2 ]
+    depends_on:
+      shc2-dep:
+        condition: service_healthy
+    deploy:
+      replicas: 1
+
+  dmc:
+    profiles: ["dmc"]
+    <<: *splunkimage
+    environment:
+      SPLUNK_ROLE: splunk_monitor
+      SPLUNK_HTTP_PORT: 8299
+      <<: [ *splunkdefaultenv, *discovery, *indexer ]
+    ports: [ "8299:8299" ]
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - ./resources/ansible-helper.py:/opt/ansible/ansible-helper.py
+    depends_on:
+      cm1:
+        condition: service_healthy
+    deploy:
+      replicas: 1
+
+  dbserver:
+    profiles: [ "db" ]
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: testing
+    image: mysql:8.1
+    hostname: dbserver
+    container_name: dbserver
+    command: '--default-authentication-plugin=caching_sha2_password'
+    volumes:
+      - ./resources/dbserver:/docker-entrypoint-initdb.d:ro
+
+  dbclient:
+    profiles: [ "db" ]
+    environment:
+      DBHOST: dbserver
+      DBUSER: admin
+      DBPASSWORD: password
+      DBNAME: testing
+    image: mysql:8.1
+    hostname: dbclient
+    container_name: dbclient
+    volumes:
+      - ./resources/dbclient/entrypoint.sh:/entrypoint.sh
+    entrypoint: /entrypoint.sh

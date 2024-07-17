@@ -1,0 +1,61 @@
+#!/bin/bash
+
+SPLUNK_DEPLOYMENTCLIENT_INTERVAL=${SPLUNK_DEPLOYMENTCLIENT_INTERVAL-60}
+SPLUNK_PASSWORD=${SPLUNK_PASSWORD-password}
+SPLUNK_DISABLE_WEB=${SPLUNK_DISABLE_WEB-1}
+
+if [[ ! -z $SPLUNK_DEPLOYMENT_SERVER ]] && [[ ! -e /opt/splunkforwarder/etc/system/local/deploymentclient.conf ]];then
+cat <<EOF > /opt/splunkforwarder/etc/system/local/deploymentclient.conf
+[deployment-client]
+phoneHomeIntervalInSecs = $SPLUNK_DEPLOYMENTCLIENT_INTERVAL
+#connect_timeout = 60
+#send_timeout = 600
+#recv_timeout = 600
+#handshakeRetryIntervalInSecs = 60
+
+[target-broker:deploymentServer]
+targetUri = ${SPLUNK_DEPLOYMENT_SERVER}:8089
+EOF
+fi
+
+if [[ ! -z $SPLUNK_INDEXER_URL ]] && [[ ! -e /opt/splunkforwarder/etc/system/local/outputs.conf ]];then
+cat <<EOF > /opt/splunkforwarder/etc/system/local/outputs.conf
+
+[indexAndForward]
+index = false
+
+[tcpout]
+defaultGroup = default-autolb-group
+
+[tcpout:default-autolb-group]
+server = ${SPLUNK_INDEXER_URL}:9997
+
+[tcpout-server://${SPLUNK_INDEXER_URL}:9997]
+EOF
+fi
+
+if [[ $SPLUNK_DISABLE_WEB = 1 ]] && [[ ! -e /opt/splunkforwarder/etc/system/local/server.conf ]];then
+cat <<EOF > /opt/splunkforwarder/etc/system/local/server.conf
+[httpServer]
+disableDefaultPort = true
+EOF
+fi
+
+if [[ ! -e /opt/splunkforwarder/etc/system/local/user-seed.conf ]];then
+cat <<EOF > /opt/splunkforwarder/etc/system/local/user-seed.conf
+[user_info]
+USERNAME = admin
+PASSWORD = ${SPLUNK_PASSWORD}
+EOF
+fi
+
+faketty () {
+  script -qefc "$(printf "%q " "$@")" /dev/null
+}
+
+faketty /opt/splunkforwarder/bin/splunk start --accept-license
+
+sleep 60
+tail -n 0 -f /opt/splunkforwarder/var/log/splunk/splunkd_stderr.log &
+wait
+

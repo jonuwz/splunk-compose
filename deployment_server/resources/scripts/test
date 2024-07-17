@@ -1,0 +1,28 @@
+#!/bin/bash
+
+app_max=13
+apps="$( seq 0 $app_max )"
+let per=23
+let iters=4
+let reserved=2
+let avail=$((app_max-reserved))
+
+echo app_max=$app_max
+echo apps=$apps
+echo per=$per
+echo iters=$iters
+echo reserved=$reserved
+echo avail=$avail
+
+let iter=0
+
+while (( $iter < $iters ));do
+  start=$((iter*per))
+  for i in $( seq 0 $((per-1)) );do
+    j=$(( start + i ))
+    k=$(( reserved + (j%(avail+1)) ))
+    echo -n "$k "
+  done
+  iter=$((iter+1))
+  echo
+done
