@@ -14,7 +14,7 @@ RUN update-ca-trust && \
     microdnf install -y vim git-core jq nmap net-tools lsof && \
     microdnf clean all
 
-RUN curl -s -L -f -o /tmp/tcpdump.rpm http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm && \
+RUN curl -s -L -f -o /tmp/tcpdump.rpm http://vault.centos.org/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm && \
     rpm -i /tmp/tcpdump.rpm && \
     rm /tmp/tcpdump.rpm
 
