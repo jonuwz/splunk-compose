@@ -12,3 +12,8 @@ for i in {0..10};do echo "<165>$(date +'%b %e %T') localhost test: lets go! - me
 
 Then syslog-ng will look for matching filters in filters.conf, then set .meta.splunk_index and .meta.splunk_sourcetype, which you can then use in the HEC destination
 
+# Y tho ?
+
+write directly to splunk without intermediate files.
+no enormous fishbucket.
+huge persistent disk buffers.
