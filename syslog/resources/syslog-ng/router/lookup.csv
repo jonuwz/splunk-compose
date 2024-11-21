@@ -1,2 +1,2 @@
-f_localhost,splunk_index-role,main
+f_localhost,splunk_index,main
 f_localhost,splunk_sourcetype,"splunk:syslog"
