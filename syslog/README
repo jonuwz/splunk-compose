@@ -1,0 +1,6 @@
+# syslog-ng
+
+Abuse syslog-ng contextual data https://syslog-ng.github.io/admin-guide/140_Enriching_log_messages_with_external_data/000_Adding_metadata_from_external_file/000_Using_filters_as_selector
+
+To route messages to splunk using hec
+

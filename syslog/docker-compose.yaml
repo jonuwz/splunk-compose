@@ -1,0 +1,33 @@
+version: "3.7"
+
+services:
+
+  ssl:
+    image: local/splunk:9.3.1
+    build:
+      context: ../.images/splunk
+      args:
+        VERSION: 9.3.1
+        TOOL: splunk
+    container_name: ssl
+    hostname: ssl
+    ports:
+    - "8000:8000"
+    - "8089:8089"
+    - "8088:8088"
+    environment:
+      SPLUNK_DISABLE_POPUPS: "true"
+      SPLUNK_ROLE: splunk_standalone
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_PASSWORD: password
+      SPLUNK_HEC_TOKEN: password
+    volumes:
+    - ${HOME}/projects:/projects
+  
+  syslog:
+    image: balabit/syslog-ng:4.8.0
+    container_name: syslog
+    hostname: syslog
+    volumes:
+    - ./resources/syslog-ng/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+    - ./resources/syslog-ng/router:/etc/syslog-ng/router
